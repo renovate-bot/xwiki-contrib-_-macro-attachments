@@ -30,7 +30,7 @@
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>macro-attachments</artifactId>
   <version>3.5-SNAPSHOT</version>
-  <name>Attachments macro</name>
+  <name>Attachments Macro</name>
   <packaging>xar</packaging>
   <description>Lists all the attachments from the current document in a livetable.</description>
   <properties>
