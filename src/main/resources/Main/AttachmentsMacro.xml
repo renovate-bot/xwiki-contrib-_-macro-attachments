@@ -1,0 +1,789 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<xwikidoc version="1.4" reference="Main.AttachmentsMacro" locale="">
+  <web>Main</web>
+  <name>AttachmentsMacro</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>XWiki.Admin</creator>
+  <creationDate>1370329694000</creationDate>
+  <parent>Main.WebHome</parent>
+  <author>XWiki.Admin</author>
+  <contentAuthor>XWiki.Admin</contentAuthor>
+  <date>1629194605000</date>
+  <contentUpdateDate>1629194236000</contentUpdateDate>
+  <version>4.1</version>
+  <title>Attachments Macro</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output="false"}}&#xd;
+##&#xd;
+## Offset = item # at which to start displaying data&#xd;
+## -------------------------------&#xd;
+#set ($offset = "$!request.offset")&#xd;
+#if ($offset == '')&#xd;
+  #set ($offset = '1')&#xd;
+#end&#xd;
+#set ($offset = $mathtool.max($numbertool.integer($offset), 1))&#xd;
+##&#xd;
+## Limit = # of items to display&#xd;
+## -------------------------------&#xd;
+#set ($limit = "$!request.l")&#xd;
+#if ($limit == '')&#xd;
+  #set ($limit = "$!request.limit")&#xd;
+#end&#xd;
+#if ($limit == '')&#xd;
+  #set ($limit = '10')&#xd;
+#end&#xd;
+#set ($limit = $mathtool.max($numbertool.integer($limit), 1))&#xd;
+##&#xd;
+## Document parameter&#xd;
+## -------------------------------&#xd;
+#set ($aDocFullName = "$!request.document")&#xd;
+#if ($aDocFullName != '' &amp;&amp; $xwiki.exists($aDocFullName))&#xd;
+  #set ($aDoc = $xwiki.getDocument($aDocFullName))&#xd;
+#end&#xd;
+##&#xd;
+## Sort parameter&#xd;
+## -------------------------------&#xd;
+#set ($sortColumn = "$!request.sort.toLowerCase()")&#xd;
+##&#xd;
+## Filter by name&#xd;
+##&#xd;
+#set ($filterByName = false)&#xd;
+#set ($namePattern = '')&#xd;
+#if ("$!request.name" != '')&#xd;
+  #set ($filterByName = true)&#xd;
+  #set ($namePattern = "$!request.name.toLowerCase()")&#xd;
+#end&#xd;
+##&#xd;
+## Macros&#xd;
+## -------------------------------&#xd;
+#macro (getOrderedAttachmentNameList)&#xd;
+  #set ($attachmentComposedNameList = [])&#xd;
+  #set ($orderedAttachmentComposedNameList = [])&#xd;
+  #foreach ($attach in $aDoc.getAttachmentList())&#xd;
+    ## Filter by name&#xd;
+    #if (! $filterByName || ($attach.filename.toLowerCase().indexOf($namePattern) >= 0))&#xd;
+      #set ($prefix = $attach.author)&#xd;
+      #if ($sortColumn == 'date')&#xd;
+        #set ($prefix = $datetool.format('yyyyMMddHHmmss', $attach.date))&#xd;
+      #elseif ($sortColumn == 'size')&#xd;
+        #set ($fileSize = "$!attach.longSize")&#xd;
+        #set ($maxFileSize = "100000000000")&#xd;
+        #set ($index = $maxFileSize.length() - $fileSize.length())&#xd;
+        #set ($prefix = $maxFileSize.substring(0, $index)  + $fileSize)&#xd;
+      #end&#xd;
+      #set ($attachComposedName = $prefix + '|' + $attach.filename)&#xd;
+      #set ($discard = $attachmentComposedNameList.add($attachComposedName))&#xd;
+    #end&#xd;
+  #end&#xd;
+  #set ($orderedAttachmentComposedNameList = $collectiontool.sort($attachmentComposedNameList))&#xd;
+  #foreach ($attachComposedName in $orderedAttachmentComposedNameList)&#xd;
+    #set ($authorLastIndex = $attachComposedName.indexOf('|') + 1)&#xd;
+    #set ($attachName = $attachComposedName.substring($authorLastIndex))&#xd;
+    #set ($discard = $orderedAttachmentNameList.add($attachName))&#xd;
+  #end&#xd;
+#end&#xd;
+## Get ordered attachments list&#xd;
+## -------------------------------&#xd;
+#set ($orderedAttachmentNameList = [])&#xd;
+#set ($attachmentList = $aDoc.getAttachmentList())&#xd;
+#if ($aDoc &amp;&amp; $attachmentList.size() > 0)&#xd;
+  #if ($sortColumn == 'name')&#xd;
+    #foreach ($attach in $attachmentList)&#xd;
+      ## Filter by name&#xd;
+      #if (! $filterByName || ($attach.filename.toLowerCase().indexOf($namePattern) >= 0))&#xd;
+        #set ($discard = $orderedAttachmentNameList.add($attach.filename))&#xd;
+      #end&#xd;
+    #end&#xd;
+    #set ($orderedAttachmentNameList = $collectiontool.sort($orderedAttachmentNameList))&#xd;
+  #elseif ($sortColumn == 'type')&#xd;
+    #set ($attachmentReversedNameList = [])&#xd;
+    #set ($orderedAttachmentReversedNameList = [])&#xd;
+    #foreach ($attach in $attachmentList)&#xd;
+      #set ($attachName = $attach.filename)&#xd;
+      ## Filter by name&#xd;
+      #if (! $filterByName || ($attach.filename.toLowerCase().indexOf($namePattern) >= 0))&#xd;
+        #set ($extensionIndex = $attachName.lastIndexOf('.'))&#xd;
+        #set ($extension = $attachName.substring($extensionIndex))&#xd;
+        #set ($fileName = $attachName.substring(0, $extensionIndex))&#xd;
+        #set ($attachReversedName = $extension + '|' + $fileName)&#xd;
+        #set ($discard = $attachmentReversedNameList.add($attachReversedName))&#xd;
+      #end&#xd;
+    #end&#xd;
+    #set ($orderedAttachmentReversedNameList = $collectiontool.sort($attachmentReversedNameList))&#xd;
+    #foreach ($attachReversedName in $orderedAttachmentReversedNameList)&#xd;
+      #set ($extensionLastIndex = $attachReversedName.indexOf('|'))&#xd;
+      #set ($nameIndex = $extensionLastIndex + 1)&#xd;
+      #set ($attachName = $attachReversedName.substring($nameIndex) + $attachReversedName.substring(0, $extensionLastIndex))&#xd;
+      #set ($discard = $orderedAttachmentNameList.add($attachName))&#xd;
+    #end&#xd;
+  #else&#xd;
+    #getOrderedAttachmentNameList()&#xd;
+  #end&#xd;
+#end&#xd;
+##&#xd;
+## Determine the attachments sub list to display.&#xd;
+## -------------------------------&#xd;
+#if ($services.security.authorization.hasAccess('view', $aDoc.documentReference))&#xd;
+  #set ($totalRows = $orderedAttachmentNameList.size())&#xd;
+  #set ($returnedRows = $mathtool.min($limit, $totalRows))&#xd;
+  #if ($offset + $returnedRows > $totalRows)&#xd;
+    #set ($returnedRows = $totalRows - $offset + 1)&#xd;
+  #end&#xd;
+  #if ($request.dir == 'desc')&#xd;
+    #set ($discard = $collectiontool.reverseModifiable($orderedAttachmentNameList))&#xd;
+  #end&#xd;
+  #set ($start = $offset - 1)&#xd;
+  #set ($end = $start + $returnedRows)&#xd;
+  #set ($attachNames = $orderedAttachmentNameList.subList($start, $end))&#xd;
+#else&#xd;
+  #set ($totalRows = 0)&#xd;
+  #set ($returnedRows = 0)&#xd;
+  #set ($attachNames = [])&#xd;
+#end&#xd;
+{{/velocity}}&#xd;
+&#xd;
+{{velocity}}&#xd;
+##&#xd;
+## JSON&#xd;
+## -------------------------------&#xd;
+#set ($json = {&#xd;
+  "totalrows": $totalRows,&#xd;
+  "matchingtags": {},&#xd;
+  "tags": [],&#xd;
+  "returnedrows": $returnedRows,&#xd;
+  "offset": $offset,&#xd;
+  "reqNo": $numbertool.integer($request.reqNo),&#xd;
+  "rows": []&#xd;
+})&#xd;
+#foreach ($attachName in $attachNames)&#xd;
+  #set ($attach = $aDoc.getAttachment($attachName))&#xd;
+  #set ($discard = $json.rows.add({&#xd;
+    "name": $attachName,&#xd;
+    "name_url": $aDoc.getAttachmentURL($attachName),&#xd;
+    "type": "#mimetypeimg($attach.mimeType.toLowerCase() $attach.filename.toLowerCase())",&#xd;
+    "size": "#dynamicsize($attach.longSize)",&#xd;
+    "author": "#displayUser($attach.author)",&#xd;
+    "date": "$!xwiki.formatDate($attach.date)",&#xd;
+    "doc_viewable": true&#xd;
+   }))&#xd;
+#end&#xd;
+#if ($xcontext.action == 'get')&#xd;
+  #jsonResponse($json)&#xd;
+#end&#xd;
+{{/velocity}}</content>
+  <object>
+    <name>Main.AttachmentsMacro</name>
+    <number>0</number>
+    <className>XWiki.WikiMacroClass</className>
+    <guid>c1870a14-0a06-4ff4-b0dd-17b292d2ec4c</guid>
+    <class>
+      <name>XWiki.WikiMacroClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <async_cached>
+        <defaultValue>0</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <name>async_cached</name>
+        <number>13</number>
+        <prettyName>Cached</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </async_cached>
+      <async_context>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>1</multiSelect>
+        <name>async_context</name>
+        <number>14</number>
+        <prettyName>Context elements</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator>, </separator>
+        <separators>|, </separators>
+        <size>5</size>
+        <unmodifiable>0</unmodifiable>
+        <values>action=Action|doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </async_context>
+      <async_enabled>
+        <defaultValue>0</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <name>async_enabled</name>
+        <number>12</number>
+        <prettyName>Asynchronous rendering</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </async_enabled>
+      <code>
+        <disabled>0</disabled>
+        <editor>Text</editor>
+        <name>code</name>
+        <number>10</number>
+        <prettyName>Macro code</prettyName>
+        <rows>20</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentDescription>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>contentDescription</name>
+        <number>9</number>
+        <prettyName>Content description (Not applicable for "No content" type)</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </contentDescription>
+      <contentJavaType>
+        <cache>0</cache>
+        <defaultValue>Unknown</defaultValue>
+        <disabled>0</disabled>
+        <displayType>input</displayType>
+        <freeText>allowed</freeText>
+        <largeStorage>1</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentJavaType</name>
+        <number>8</number>
+        <picker>1</picker>
+        <prettyName>Macro content type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator>|</separator>
+        <separators>|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>Unknown|Wiki</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentJavaType>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>7</number>
+        <prettyName>Macro content availability</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator>|</separator>
+        <separators>|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>Optional|Mandatory|No content</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <defaultCategory>
+        <disabled>0</disabled>
+        <name>defaultCategory</name>
+        <number>4</number>
+        <prettyName>Default category</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultCategory>
+      <description>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>description</name>
+        <number>3</number>
+        <prettyName>Macro description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <id>
+        <disabled>0</disabled>
+        <name>id</name>
+        <number>1</number>
+        <prettyName>Macro id</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </id>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>2</number>
+        <prettyName>Macro name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <priority>
+        <disabled>0</disabled>
+        <name>priority</name>
+        <number>11</number>
+        <numberType>integer</numberType>
+        <prettyName>Priority</prettyName>
+        <size>10</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+      </priority>
+      <supportsInlineMode>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>supportsInlineMode</name>
+        <number>5</number>
+        <prettyName>Supports inline mode</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </supportsInlineMode>
+      <visibility>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>visibility</name>
+        <number>6</number>
+        <prettyName>Macro visibility</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator>|</separator>
+        <separators>|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>Current User|Current Wiki|Global</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </visibility>
+    </class>
+    <property>
+      <async_cached>0</async_cached>
+    </property>
+    <property>
+      <async_context/>
+    </property>
+    <property>
+      <async_enabled>0</async_enabled>
+    </property>
+    <property>
+      <code>{{velocity}}&#xd;
+#set ($discard = $xwiki.ssfx.use('uicomponents/widgets/userpicker/userPicker.css', true))&#xd;
+#set ($discard = $services.localization.use('document', 'Main.AttachmentsMacroTranslations'))&#xd;
+##&#xd;
+## Sort parameter&#xd;
+## -------------------------------&#xd;
+#set ($sortList = ['name', 'type', 'size', 'author', 'date'])&#xd;
+#set ($aSort = "$!xcontext.macro.params.get('sort').toLowerCase()")&#xd;
+#if (!$sortList.contains($aSort))&#xd;
+  #set ($aSort = 'name')&#xd;
+#end&#xd;
+##&#xd;
+## Order parameter&#xd;
+## -------------------------------&#xd;
+#set ($aOrder = "$!xcontext.macro.params.get('order').toLowerCase()")&#xd;
+#if ($aOrder != 'desc')&#xd;
+  #set ($aOrder = 'asc')&#xd;
+#end&#xd;
+##&#xd;
+## Limit parameter&#xd;
+## -------------------------------&#xd;
+#set ($limit = "$!xcontext.macro.params.get('limit')")&#xd;
+#if ($limit == '')&#xd;
+  #set ($limit = '10')&#xd;
+#end&#xd;
+#set ($aLimit = $numbertool.integer($limit))&#xd;
+##&#xd;
+## Document parameter&#xd;
+## -------------------------------&#xd;
+#set ($aDocFullName = "$!xcontext.macro.params.get('document')")&#xd;
+#if ($aDocFullName != '' &amp;&amp; $xwiki.exists($aDocFullName))&#xd;
+  #set ($aDoc = $aDocFullName)&#xd;
+#else&#xd;
+  #set ($aDoc = $doc.fullName)&#xd;
+#end&#xd;
+##&#xd;
+## The live table&#xd;
+## -------------------------------&#xd;
+#set ($columns = ['name', 'type', 'size', 'author', 'date'])&#xd;
+#set ($columnsProperties = {&#xd;
+  'name' : { 'type' : 'text', 'link' : 'field' },&#xd;
+  'type' : { 'type' : 'text', 'html' : 'true', 'filterable' : 'false' },&#xd;
+  'size' : { 'type' : 'text', 'filterable' : 'false' },&#xd;
+  'author' : { 'type' : 'text', 'html' : 'true', 'filterable' : 'false' },&#xd;
+  'date' : { 'type' : 'text', 'filterable' : 'false' }&#xd;
+})&#xd;
+#set ($options = {&#xd;
+ 'resultPage' : 'Main.AttachmentsMacro',&#xd;
+ 'selectedColumn' : $aSort,&#xd;
+ 'defaultOrder' : $aOrder,&#xd;
+ 'extraParams' : "document=$escapetool.url($aDoc)",&#xd;
+ 'pageSize' : 'false',&#xd;
+ 'translationPrefix' : 'rendering.macro.attachments.livetable.',&#xd;
+ 'rowCount': $aLimit&#xd;
+})&#xd;
+#set ($liveTableId = $xcontext.macro.params.id)&#xd;
+#if ("$!liveTableId" == '')&#xd;
+  ## TODO: Improve this since we could have several live tables on the same page with same ids.&#xd;
+  #set ($liveTableId = "attachments-table-$mathtool.random(1, 1000)")&#xd;
+#end&#xd;
+(% style="width: 99%;" %)&#xd;
+#livetable($liveTableId $columns $columnsProperties $options)&#xd;
+{{/velocity}}</code>
+    </property>
+    <property>
+      <contentDescription></contentDescription>
+    </property>
+    <property>
+      <contentJavaType></contentJavaType>
+    </property>
+    <property>
+      <contentType>No content</contentType>
+    </property>
+    <property>
+      <defaultCategory></defaultCategory>
+    </property>
+    <property>
+      <description>Displays the list of attachments for a given document using a live table.</description>
+    </property>
+    <property>
+      <id>attachments</id>
+    </property>
+    <property>
+      <name>Attachments</name>
+    </property>
+    <property>
+      <priority/>
+    </property>
+    <property>
+      <supportsInlineMode>0</supportsInlineMode>
+    </property>
+    <property>
+      <visibility>Current Wiki</visibility>
+    </property>
+  </object>
+  <object>
+    <name>Main.AttachmentsMacro</name>
+    <number>0</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>6f79c895-2682-44a8-b525-a06a1d7569b3</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <type>
+        <disabled>0</disabled>
+        <name>type</name>
+        <number>5</number>
+        <prettyName>Parameter type</prettyName>
+        <size>60</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </type>
+    </class>
+    <property>
+      <defaultValue>name</defaultValue>
+    </property>
+    <property>
+      <description>The column to sort by. Accepted values: 'name', 'type', 'size', 'author' and 'date'.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>sort</name>
+    </property>
+    <property>
+      <type></type>
+    </property>
+  </object>
+  <object>
+    <name>Main.AttachmentsMacro</name>
+    <number>1</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>680aa7f0-b13c-4c59-b0ed-91bba1a8c040</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <type>
+        <disabled>0</disabled>
+        <name>type</name>
+        <number>5</number>
+        <prettyName>Parameter type</prettyName>
+        <size>60</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </type>
+    </class>
+    <property>
+      <defaultValue>asc</defaultValue>
+    </property>
+    <property>
+      <description>The order to use on the sort column. Accepted values: 'asc' and 'desc'.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>order</name>
+    </property>
+    <property>
+      <type></type>
+    </property>
+  </object>
+  <object>
+    <name>Main.AttachmentsMacro</name>
+    <number>2</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>0e0df8ec-d4a7-4c64-8a18-ad9bb3aefbbf</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <type>
+        <disabled>0</disabled>
+        <name>type</name>
+        <number>5</number>
+        <prettyName>Parameter type</prettyName>
+        <size>60</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </type>
+    </class>
+    <property>
+      <defaultValue></defaultValue>
+    </property>
+    <property>
+      <description>The document whose attachments are displayed.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>document</name>
+    </property>
+    <property>
+      <type></type>
+    </property>
+  </object>
+  <object>
+    <name>Main.AttachmentsMacro</name>
+    <number>3</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>22b4d929-4612-4365-bb88-430be5ffc81e</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <type>
+        <disabled>0</disabled>
+        <name>type</name>
+        <number>5</number>
+        <prettyName>Parameter type</prettyName>
+        <size>60</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </type>
+    </class>
+    <property>
+      <defaultValue>10</defaultValue>
+    </property>
+    <property>
+      <description>The number of attachments to display per page.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>limit</name>
+    </property>
+    <property>
+      <type></type>
+    </property>
+  </object>
+</xwikidoc>
