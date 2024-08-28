@@ -29,7 +29,7 @@
   </parent>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>macro-attachments</artifactId>
-  <version>3.5</version>
+  <version>3.6-SNAPSHOT</version>
   <name>Attachments Macro</name>
   <packaging>xar</packaging>
   <description>Lists all the attachments from the current document in a livetable.</description>
@@ -41,7 +41,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/macro-attachments.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/macro-attachments.git</developerConnection>
     <url>https://github.com/xwiki-contrib/macro-attachments</url>
-    <tag>macro-attachments-3.5</tag>
+    <tag>HEAD</tag>
   </scm>
   <developers>
     <developer>
