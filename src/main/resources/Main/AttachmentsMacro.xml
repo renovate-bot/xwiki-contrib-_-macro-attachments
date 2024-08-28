@@ -458,7 +458,35 @@
   #set ($liveTableId = "attachments-table-$mathtool.random(1, 1000)")
 #end
 (% style="width: 99%;" %)
+#if ($hasEdit || $hasAdmin)
+  (% class="btn btn-default" id="macroUploadButton" data-toggle="modal" data-target="#attachmentUploadModal" %)
+  $escapetool.xml($services.localization.render('core.viewers.attachments.upload.title'))
+#end
 #livetable($liveTableId $columns $columnsProperties $options)
+{{html clean="false"}}
+&lt;div class="modal fade" id="attachmentUploadModal" tabindex="-1" role="dialog"&gt;
+  &lt;div class="modal-dialog"&gt;
+    &lt;div class="modal-content"&gt;
+      &lt;div class="modal-header"&gt;
+        &lt;button type="button" class="close" data-dismiss="modal"&gt;&amp;times;&lt;/button&gt;
+        &lt;h4 class="modal-title"&gt;$services.localization.render('core.viewers.attachments.upload.title')&lt;/h4&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-body"&gt;
+        &lt;form action="$doc.getURL('upload')" enctype="multipart/form-data" method="post"&gt;
+          &lt;input type="hidden" name="form_token" value="$services.csrf.token" /&gt;
+          &lt;input type="hidden" name="xredirect" value="$doc.URL" /&gt;
+          &lt;label for="xwikiUploadFile"&gt;$services.localization.render('core.viewers.attachments.upload.file')&lt;/label&gt;
+          &lt;input id="xwikiUploadFile" type="file" name="filepath" size="40" class="uploadFileInput noitems" data-max-file-size="$!escapetool.xml($xwiki.getSpacePreference('upload_maxsize'))" /&gt;
+          &lt;span class="buttonwrapper"&gt;&lt;input type="submit" value="$services.localization.render('core.viewers.attachments.upload.submit')" class="button btn btn-primary"/&gt;&lt;/span&gt;
+          &lt;span class="buttonwrapper"&gt;&lt;a class="cancel secondary button btn btn-primary" href="$doc.getURL()"&gt;$services.localization.render('core.viewers.attachments.upload.cancel')&lt;/a&gt;&lt;/span&gt;
+        &lt;/form&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-footer"&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+{{/html}}
 {{/velocity}}</code>
     </property>
     <property>
